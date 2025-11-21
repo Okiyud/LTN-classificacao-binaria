@@ -149,33 +149,19 @@ class CNN_simple(nn.Module):
             nn.Linear(128, n_classes)
         )
     
-    def forward(self, x, class_label):
+    def forward(self, x):
         """
-        Proper LTN predicate implementation:
-        - Takes image x AND class_label as separate inputs
-        - Returns a single truth value in [0,1] range for each (x, class_label) pair
+        Standard CNN forward pass - returns logits for all classes
         """
         # Handle LTNObject inputs
         if hasattr(x, 'value'):
             x = x.value
-        if hasattr(class_label, 'value'):
-            class_label = class_label.value
             
         # Process image through CNN
         features = self.conv_layers(x)
         all_logits = self.classifier(features)  # shape: [batch_size, n_classes]
         
-        # class_label should be a tensor of class indices [batch_size, 1] or [batch_size]
-        # Ensure it's the right shape for indexing
-        if class_label.dim() > 1:
-            class_label = class_label.squeeze()
-            
-        # Get the logits for the specified classes
-        batch_indices = torch.arange(all_logits.shape[0])
-        selected_logits = all_logits[batch_indices, class_label.long()]
-        
-        # Apply sigmoid to get probability in [0,1] range
-        return torch.sigmoid(selected_logits)
+        return all_logits
         
 # -------------------------------------------------------------------------------
 # Simple model for left_of relation - PYTORCH VERSION
@@ -261,92 +247,8 @@ def create_absolute_attribute_predicate(cnn_model):
             return torch.sigmoid(selected_logits)
     
     return ltn.Predicate(AbsoluteAttributePredicate(cnn_model))
-    
-'''
-# Simple CNN model - PYTORCH VERSION
-class CNN_simple(nn.Module):
-    def __init__(self, n_classes, img_size=[36, 36], use_sigmoid_for_ltn=False):
-        super(CNN_simple, self).__init__()
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(3, 16, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-        )
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(64 * 4 * 4, 128),
-            nn.ReLU(),
-            nn.Linear(128, n_classes)
-        )
-        self.use_sigmoid_for_ltn = use_sigmoid_for_ltn
-        
-    def forward(self, x, class_label=None):
-        if hasattr(x, 'value'):
-            x = x.value
-            
-        x = self.conv_layers(x)
-        x = self.classifier(x)
-        
-        # Add sigmoid activation for LTN predicate usage
-        if self.use_sigmoid_for_ltn:
-            x = torch.sigmoid(x)
-            
-        return x
 
-# ----------------------------------------------------------
-class CNN_simple(nn.Module):
-    def __init__(self, n_classes, img_size=[36, 36]):
-        super(CNN_simple, self).__init__()
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(3, 16, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-        )
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(64 * 4 * 4, 128),
-            nn.ReLU(),
-            nn.Linear(128, n_classes)
-        )
-    
-    def forward(self, x, class_label=None):
-        # Handle LTNObject input
-        if hasattr(x, 'value'):
-            x = x.value
-            
-        # Process through CNN
-        features = self.conv_layers(x)
-        logits = self.classifier(features)
-        
-        # If class_label is provided, select the corresponding class probability
-        if class_label is not None:
-            # Handle LTNObject for class_label
-            if hasattr(class_label, 'value'):
-                class_label = class_label.value
-                
-            # Ensure class_label is integer indices
-            if class_label.dtype == torch.float32:
-                class_label = class_label.long()
-                
-            # Get the logits for the specified class
-            # class_label should be shape [batch_size] with class indices
-            selected_logits = logits[torch.arange(logits.shape[0]), class_label]
-            
-            # Apply sigmoid to get probability in [0,1] range
-            return torch.sigmoid(selected_logits)
-        
-        # If no class_label, return all logits (for training)
-        return logits
-'''
+# -------------------------------------------------------------------------------
+def create_relative_predicate(model):
+    """Create an LTN-compatible predicate for spatial relationships"""
+    return ltn.Predicate(model)
