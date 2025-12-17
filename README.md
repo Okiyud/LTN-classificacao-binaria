@@ -21,9 +21,6 @@ Sistema de classificação neuro-simbólico que combina redes neurais convolucio
 ```bash
 # Python 3.8+
 python --version
-
-# Anaconda/Miniconda (recomendado)
-conda --version
 ```
 
 ### Instalação de Dependências
@@ -52,7 +49,6 @@ LTN-classificacao-binaria/
 │   ├── Cat/                   # Imagens de gatos
 │   └── Dog/                   # Imagens de cachorros
 ├── README.md                  # Este arquivo
-└── kagglecatsanddogs_5340/    # Dataset alternativo
 ```
 
 ---
